@@ -1,0 +1,50 @@
+syntax = "proto3";
+package tutorial;
+
+option go_package = "github.com/protocolbuffers/protobuf/examples/go/tutorialpb";
+
+import "google/protobuf/timestamp.proto";
+
+message Person {
+  string name = 1;
+  int32 id = 2;  // Unique ID number for this person.
+  string email = 3;
+
+  Country country = 8; 
+
+  enum Country {
+    china = 0;
+    usa = 1;
+    usb = 2;
+    usc = 3;
+  }
+
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+
+  message PhoneNumber {
+    int32 number = 1;
+    PhoneType type = 2;
+  }
+
+  repeated PhoneNumber phones = 4;
+
+  int32 last_updated = 5;
+
+  FullName fullname = 6;
+
+  repeated string place = 7;
+
+  message FullName {
+    string fist_name = 1;
+    string last_name = 2;
+  }
+}
+
+// Our address book file is just one of these.
+message AddressBook {
+  repeated Person people = 1;
+}

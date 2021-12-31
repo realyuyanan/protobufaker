@@ -10,6 +10,14 @@ message Person {
   int32 id = 2;  // Unique ID number for this person.
   string email = 3;
 
+  repeated PhoneNumber phones = 4;
+
+  int32 last_updated = 5;
+
+  FullName fullname = 6;
+
+  repeated string place = 7;
+
   Country country = 8; 
 
   enum Country {
@@ -30,16 +38,9 @@ message Person {
     PhoneType type = 2;
   }
 
-  repeated PhoneNumber phones = 4;
-
-  int32 last_updated = 5;
-
-  FullName fullname = 6;
-
-  repeated string place = 7;
 
   message FullName {
-    string fist_name = 1;
+    string first_name = 1;
     string last_name = 2;
   }
 }

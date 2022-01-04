@@ -11,5 +11,9 @@
   "dependencies": {
     "faker": "^5.5.3",
     "protobufjs": "^6.11.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/realyuyanan/protobufaker.git"
   }
 }

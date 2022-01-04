@@ -1,6 +1,6 @@
 # protobufaker
 <p align="center">
-![](./logo.jpeg?raw=true 'protobufaker')
+  <img src="./logo.jpeg" />
 </p>
 
 # demo

@@ -6,7 +6,7 @@
 # demo
 
 ```
-npm install protobufaker --save
+npm i protobufaker
 ```
 
 ```
@@ -17,7 +17,7 @@ const faker = new Protobufaker({
     keepCase: true,
     path: path.resolve(__dirname, './demo.proto'), // absolute path
     formatConfig: {
-        name: 'name',
+        name: 'name', // Available options refer to fakerjs.
         email: "email",
         number: 'phone',
         last_updated: 'date.soon',

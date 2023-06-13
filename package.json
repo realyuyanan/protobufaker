@@ -4,7 +4,11 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "demo": "node demo/index.js"
+    "demo": "node ./demo/index",
+    "test": "npm run test",
+    "publish:coverage": "echo 'publish:coverage'",
+    "eslint": "npm run eslint",
+    "build": "npm run build"
   },
   "author": "",
   "license": "ISC",
@@ -12,8 +16,13 @@
     "faker": "^5.5.3",
     "protobufjs": "^6.11.2"
   },
+  "devDependencies": {
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/realyuyanan/protobufaker.git"
-  }
+  },
+  "files": [
+    "lib/*"
+  ]
 }

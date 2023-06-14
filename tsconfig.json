@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "rootDir": "src/",
+    "outDir": "./lib",
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "sourceMap": true,
+  },
+  "exclude": ["./test/", "./demo"]
+}

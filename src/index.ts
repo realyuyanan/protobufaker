@@ -1,6 +1,24 @@
-import * as protobufjs from 'protobufjs';
-import * as fs from 'fs';
-import { BASE_FILED_TYPE, getMockValue, getRandomNumber, getRandomValue } from './get-mock-value';
+import {
+  ReflectionObject,
+  Root,
+  Field,
+  Namespace as ParentType,
+  Enum
+} from "protobufjs";
+import * as protobufjs from "protobufjs";
+import * as fs from "fs";
+import {
+  BASE_FILED_TYPE,
+  BASE_TYPE,
+  getMockValue,
+  getRandomNumber,
+  getRandomValue
+} from "./get-mock-value";
+
+const makeValueWithEnumType = (enumType: Enum) => {
+  const { values } = enumType.toJSON();
+  return getRandomValue(Object.keys(values));
+};
 
 export type FakerConfig = {
   name?: string;
@@ -13,97 +31,128 @@ export type FakerConfig = {
 export default class Protobufaker {
   public keepCase = true;
   public name;
-  public formatConfig = {};
+  public formatConfig: Record<string, any> = {};
 
   private enableCache = false;
 
-  private pbParseContext;
+  private pbParseContext: Root;
 
   private cache: Record<string, any> = {};
 
   constructor(config: FakerConfig) {
-    const { name, enableCache, keepCase, path: absolutePbPath, formatConfig } = config;
+    const {
+      name,
+      enableCache,
+      keepCase,
+      path: absolutePbPath,
+      formatConfig
+    } = config;
     this.enableCache = enableCache;
     this.keepCase = keepCase;
     this.name = name || absolutePbPath;
     this.formatConfig = formatConfig;
-    try {
-      const pbFileContent = fs.readFileSync(absolutePbPath).toString('utf-8');
+
+    let readStream = fs.createReadStream(absolutePbPath, "utf-8");
+
+    let pbFileContent = "";
+    const pbFileContentArray: string[] = [];
+    readStream.on("data", (buffer: string) => {
+      pbFileContentArray.push(buffer);
+    });
+
+    readStream.on("end", () => {
+      pbFileContent = pbFileContentArray.join("");
       const pbParseContext = protobufjs.parse(pbFileContent, {
-        keepCase,
+        keepCase
       }).root;
+
       this.pbParseContext = pbParseContext;
-    } catch (e) {
-      throw e;
-    }
-    if (enableCache) {
-      this.cache[name] = {};
-    }
+
+      if (enableCache) {
+        this.cache[name] = {};
+      }
+
+      readStream.close();
+      readStream = null;
+    });
   }
 
-  findValue(name: string) {
+  public findValue(name: string) {
     const { pbParseContext, enableCache, cache } = this;
     const context = pbParseContext.lookup(name);
     if (enableCache) {
-      if (typeof cache[name] === 'undefined') {
+      if (typeof cache[name] === "undefined") {
         cache[name] = this.makeValue(context);
       }
+
       return cache[name];
     }
+
     return this.makeValue(name);
   }
 
-  private makeValue(typeOrTypeName: string | protobufjs.ReflectionObject, rule?: string, parent?: protobufjs.ReflectionObject, name?: string) {
+  private makeValue(
+    typeOrTypeName: string | ReflectionObject,
+    rule?: string,
+    parent?: ParentType,
+    name?: string
+  ): (Record<string, any> | any[] | any) {
     if (typeOrTypeName instanceof protobufjs.Type) {
-      return this.parseFileds(typeOrTypeName.fields)
+      return this.parseFields(typeOrTypeName.fields);
     }
-    if (BASE_FILED_TYPE[typeOrTypeName]) {
-      return this.makeValueWithBaseType(typeOrTypeName, name);
-    } else {
-      if (rule === 'repeated') {
-        return this.makeValueWithRepeatedRule(typeOrTypeName, parent);
-      } else {
-        try {
-          const complexType = parent.lookup(typeOrTypeName);
-          if (complexType instanceof protobufjs.Enum) {
-            return this.makeValueWithEnumType(complexType);
-          } else if (complexType instanceof protobufjs.Type) {
-            return this.parseFileds(complexType.fields);
-          }
-        } catch (e) {
-          return `get error while parse "${typeOrTypeName}"`;
-        }
+
+    if (BASE_FILED_TYPE[typeOrTypeName as BASE_TYPE]) {
+      return this.makeValueWithBaseType(typeOrTypeName as BASE_TYPE, name);
+    }
+
+    if (rule === "repeated") {
+      return this.makeValueWithRepeatedRule(typeOrTypeName, parent);
+    }
+
+    try {
+      const complexType = parent.lookup(typeOrTypeName as string);
+      if (complexType instanceof protobufjs.Enum) {
+        return makeValueWithEnumType(complexType);
       }
+
+      if (complexType instanceof protobufjs.Type) {
+        return this.parseFields(complexType.fields);
+      }
+    } catch (e) {
+      return `Got error while parse "${typeOrTypeName}", ${e}`;
     }
   }
 
-  private makeValueWithBaseType(type, name) {
-    const formatConfig = this.formatConfig[name];
-    return getMockValue(type, formatConfig);
+  private makeValueWithBaseType(
+    type: BASE_TYPE,
+    name: string
+  ) {
+    return getMockValue(type, this.formatConfig[name]);
   }
 
-  private makeValueWithRepeatedRule(type, parent) {
-    const parsedValue = new Array();
+  private makeValueWithRepeatedRule(
+    type: string | ReflectionObject,
+    parent: ParentType
+  ) {
+    const parsedValue = [];
     const randomLength = getRandomNumber();
-    for(let i = 0; i < randomLength; i += 1) {
-      parsedValue.push(this.makeValue(type, '', parent));
+    for (let i = 0; i < randomLength; i += 1) {
+      parsedValue.push(this.makeValue(type, "", parent));
     }
+
     return parsedValue;
   }
 
-  private makeValueWithEnumType(enumType) {
-    const { values } = enumType.toJSON();
-    return getRandomValue(Object.keys(values));
-  }
-
-  private parseFileds(fields) {
-    const parsedValue = {};
-    Object.keys(fields).forEach(fieldKey => {
+  private parseFields(fields: Record<string, Field>) {
+    const parsedValue: Record<string, any> = {};
+    Object.keys(fields).forEach((fieldKey) => {
       const field = fields[fieldKey];
-      const { name, type, rule, parent } = field;
+      const {
+        name, type, rule, parent
+      } = field;
       parsedValue[name] = this.makeValue(type, rule, parent, name);
     });
+
     return parsedValue;
   }
 }
-
